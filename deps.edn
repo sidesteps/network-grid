@@ -1,0 +1,7 @@
+{
+   :deps {
+          clatrix/clatrix {:mvn/version "0.5.0"}
+          net.mikera/core.matrix {:mvn/version "0.62.0"}
+         }
+}
+
