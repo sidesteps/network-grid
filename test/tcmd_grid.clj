@@ -43,13 +43,14 @@
          ['deactivate 0 0 2 2]     
          ['toggle 0 0 2 2]]         = {0 [0 1] 1 [0 1]}))
 
-
-(apply cg/to-sparse-grid (cg/read-grid (slurp "test/small_grid.txt")))
-(- (* 700 700) (apply + (map count (vals (apply cg/to-sparse-grid (cg/read-grid (slurp "test/large_grid.txt")))))))
-(spec/explain (cg/make-cmd-spec 2 2)['toggle 0 0 2 1])
+(spec/explain-str (cg/make-grid-spec 1 1) [0 1])
+(cg/to-sparse-grid (cg/read-grid (slurp "test/small_grid.txt")))
+  
+(- (* 700 700) (apply + (map count (vals (cg/to-sparse-grid (cg/read-grid (slurp "test/large_grid.txt")))))))
+(spec/explain-str (cg/make-cmd-spec 2 2) ['toggle 0 0 2 1])
 
 (do 
   (def n-rows 700)
   (def n-cols 500)
-  (tc/quick-check 100 (prop/for-all [cmds (spec/gen (cg/make-grid-spec n-rows n-cols))] 
-                                    (map? (apply cg/to-sparse-grid n-rows n-cols cmds)))))
+  (tc/quick-check 100 (prop/for-all [grid (spec/gen (cg/make-grid-spec n-rows n-cols))] 
+                                    (map? (cg/to-sparse-grid grid)))))
