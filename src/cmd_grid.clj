@@ -2,7 +2,7 @@
   (:import java.util.BitSet)
   (:require [clojure.spec.alpha :as spec]))
 
-(def grid-fn? #{'off 'on 'toggle})
+(def grid-fn? #{'deactivate 'activate 'toggle})
 
 (defmacro make-cmd-spec [max-rows max-cols]
   `(spec/and (spec/cat :fn grid-fn? 
@@ -13,10 +13,8 @@
              #(<= (% :x1) (% :x2))
              #(<= (% :y1) (% :y2))))
 
-(defmacro make-grid-spec [max-rows max-cols]
-  `(spec/cat :nrows (spec/int-in 1 ~max-rows)
-             :ncols (spec/int-in 1 ~max-cols)
-             :cmds (spec/? (spec/coll-of (make-cmd-spec ~max-rows ~max-cols)))))
+(defmacro make-grid-spec [nrows ncols]
+  `(spec/coll-of (make-cmd-spec ~nrows ~ncols)))
 
 (defn- make-state-area[nrows ncols] 
   (vec (repeatedly nrows #(new BitSet ncols))))
@@ -29,33 +27,29 @@
                          [%1 (pr-bit-set %2)]) sa)
       (into {})))
 
-(defn- off [bs x1 x2]
+(defn- deactivate [bs x1 x2]
   (.clear bs x1 x2))
 
-(defn- on [bs x1 x2]
+(defn- activate [bs x1 x2]
   (.set bs x1 x2))
 
 (defn- toggle [bs x1 x2]
   (.flip bs x1 x2))
 
-(defn to-sparse-grid 
+(defn to-sparse-grid [nrows ncols & commands]
   "Transforms command grid to sparse grid containing indices of only active cells."
-  ([nrows ncols & commands]
-   (to-sparse-grid [nrows ncols commands]))
-  ([[nrows ncols commands]]
-   (let [sa (make-state-area nrows ncols)] 
+   (let [sa (make-state-area nrows ncols)]
     (doseq [[cmd x1 y1 x2 y2] commands]
       (doseq [row (subvec sa y1 y2)]
         ((ns-resolve 'cmd-grid cmd) row x1 x2)))
-    (pr-state-area sa))))
+    (pr-state-area sa)))
 
-(defn read-grid[^String s]
-  "Parses string s into cmd-grid representation"
+(defn read-grid [^String s]
+  "Parses string s into cmd-grid representation."
   (let [parsed (read-string (str \[ s \])) 
         [nrows ncols & cmd-args] parsed
-        grid-spec (make-grid-spec nrows ncols)
-        grid [nrows ncols (partition 5 cmd-args)]]
-    (if-let (spec/valid?  grid)
-      grid
-      [:invalid (spec/explain-data)])))
-
+        cmds (partition 5 cmd-args)
+        grid-spec (make-grid-spec nrows ncols)]
+    (if (spec/valid? grid-spec cmds)
+      (concat [nrows ncols] cmds)
+      [:invalid (spec/explain-data grid-spec cmds)])))
