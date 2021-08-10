@@ -1,56 +1,57 @@
 (ns test.tcmd-grid
   (:use [clojure.test])
-  (:require [cmd-grid :as cg] :reload-all)
-  (:require [clojure.spec.alpha :as spec]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.test.check :as tc]
-            [clojure.test.check.properties :as prop]))
+  (:require [cmd-grid :as cg]
+            [cmd-grid-spec :as cgs] :reload-all)
+  (:require [clojure.spec.alpha :as spec]))
 
-(run-tests)
 
 (deftest invalid-if-command-index-out-of-range []
-  (is (not (spec/valid? (cg/make-cmd-spec 1 1) ['toggle 1 0 0 0 ]))))
+  (is (not (spec/valid? (cgs/make-cmd-spec 1 1) ['toggle 1 0 0 0 ]))))
 
 (deftest throws-if-invoked-with-index-out-of-range []
   (is (thrown? IndexOutOfBoundsException 
-               (cg/to-sparse-grid 1 1 ['on 0 0 0 2]))))
+               (cg/to-state-map 1 1 [['on 0 0 0 2]]))))
 
 (deftest basic-cases []
-  (are [cmd-grid = sparse-grid] (= (apply cg/to-sparse-grid cmd-grid) sparse-grid)
-    [0 0]     = {}
+  (are [rows cols cmds = state-map] (= (cg/to-state-map rows cols cmds) state-map)
+    1 1 []     = [[false]]
 
-    [700 700] = {} 
+    700 700 [] = (repeat 700 (repeat 700 false))
     
-    [1 1 ['activate 0 0 1 1]]       = {0 [0]}
+    1 1 [['activate 0 0 1 1]]   = [[true]]
     
-    [1 1 ['deactivate 0 0 1 1]]     = {}
+    1 1 [['deactivate 0 0 1 1]] = [[false]]
 
-    [1 1 ['activate 0 0 1 1]      
-         ['toggle 0 0 1 1]]         = {}
+    1 1 [['activate 0 0 1 1]    
+         ['toggle 0 0 1 1]]     = [[false]]
 
-    [1 1 ['activate 0 0 1 1]      
-         ['deactivate 0 0 1 1]]     = {}
+    1 1 [['activate 0 0 1 1]    
+         ['deactivate 0 0 1 1]] = [[false]]
     
-    [2 2 ['activate 0 0 2 2]]       = {0 [0 1] 1 [0 1]}
+    2 2 [['activate 0 0 2 2]]   = [[true true]
+                                  [true true]]
 
-    [2 2 ['activate 0 0 2 2]      
-         ['deactivate 0 0 2 2]]     = {}
+    2 2 [['activate 0 0 2 2]    
+         ['deactivate 0 0 2 2]] = [[false false]
+                                  [false false]]
     
-    [2 2 ['deactivate 0 0 2 2]     
-         ['activate 0 0 2 2]]       = {0 [0 1] 1 [0 1]}
+    2 2 [['deactivate 0 0 2 2]  
+         ['activate 0 0 2 2]]   = [[true true]
+                                  [true true]]
 
-    [2 2 ['activate 0 0 2 2]      
-         ['deactivate 0 0 2 2]     
-         ['toggle 0 0 2 2]]         = {0 [0 1] 1 [0 1]}))
+    2 2 [['activate 0 0 2 2]    
+         ['deactivate 0 0 2 2]  
+         ['toggle 0 0 2 2]]     = [[true true]
+                                  [true true]]
+    2 3 [['activate 0 0 1 1]     
+         ['activate 2 1 3 2]]   = [[true false false]
+                                  [false false true]]))
+(run-tests)
 
-(spec/explain-str (cg/make-grid-spec 1 1) [0 1])
-(cg/to-sparse-grid (cg/read-grid (slurp "test/small_grid.txt")))
-  
-(- (* 700 700) (apply + (map count (vals (cg/to-sparse-grid (cg/read-grid (slurp "test/large_grid.txt")))))))
-(spec/explain-str (cg/make-cmd-spec 2 2) ['toggle 0 0 2 1])
-
-(do 
+(comment (do 
   (def n-rows 700)
   (def n-cols 500)
-  (tc/quick-check 100 (prop/for-all [grid (spec/gen (cg/make-grid-spec n-rows n-cols))] 
-                                    (map? (cg/to-sparse-grid grid)))))
+  (def fn-spec (spec/fspec :args (cgs/make-grid-spec n-rows n-cols)
+                           :ret cgs/state-map))
+  (spec/exercise-fn cg/to-state-map fn-spec)
+  nil))

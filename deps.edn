@@ -1,6 +1,6 @@
 {
-   :deps {
-          org.clojure/spec.alpha {:mvn/version "0.2.194"}
-         }
-}
+ :deps {
+        org.clojure/spec.alpha {:mvn/version "0.2.194"}
+        }
+ }
 
