@@ -1,7 +1,6 @@
 (ns cmd-grid
-  (:import java.util.BitSet)
-  (:require [clojure.spec.alpha :as spec]
-            [cmd-grid-spec :as cgs]))
+  "Space optimized, in-place updated command grid."
+  (:import java.util.BitSet))
 
 (defn- make-state-area[nrows ncols] 
   (-> (vec (repeatedly nrows #(new BitSet ncols)))

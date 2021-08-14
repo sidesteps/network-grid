@@ -25,5 +25,6 @@
                               [false false true true true]
                               [false false true true true]]))
 
+(time (do (mn/run-cmd-file) nil))
 (run-tests)
 

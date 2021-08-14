@@ -5,9 +5,6 @@
   (:require [clojure.spec.alpha :as spec]))
 
 
-(deftest invalid-if-command-index-out-of-range []
-  (is (not (spec/valid? (cgs/make-cmd-spec 1 1) ['toggle 1 0 0 0 ]))))
-
 (deftest throws-if-invoked-with-index-out-of-range []
   (is (thrown? IndexOutOfBoundsException 
                (cg/to-state-map 1 1 [['on 0 0 0 2]]))))
@@ -46,12 +43,19 @@
     2 3 [['activate 0 0 1 1]     
          ['activate 2 1 3 2]]   = [[true false false]
                                   [false false true]]))
+
 (run-tests)
 
-(comment (do 
+(defmacro no-out[form]
+  `(do ~form nil))
+
+(def large-grid (read-string (slurp "test/large_grid.edn")))
+
+(time (no-out (apply cg/to-state-map large-grid)))
+
+(do 
   (def n-rows 700)
   (def n-cols 500)
   (def fn-spec (spec/fspec :args (cgs/make-grid-spec n-rows n-cols)
                            :ret cgs/state-map))
-  (spec/exercise-fn cg/to-state-map fn-spec)
-  nil))
+  (spec/exercise-fn cg/to-state-map fn-spec))
