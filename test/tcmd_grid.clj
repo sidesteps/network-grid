@@ -1,7 +1,8 @@
 (ns test.tcmd-grid
   (:use [clojure.test])
   (:require [cmd-grid :as cg]
-            [cmd-grid-spec :as cgs] :reload-all)
+            [cmd-grid-spec :as cgs]
+            [test.grid-gen :as gg] :reload-all)
   (:require [clojure.spec.alpha :as spec]))
 
 
@@ -44,18 +45,14 @@
          ['activate 2 1 3 2]]   = [[true false false]
                                   [false false true]]))
 
-(run-tests)
+(deftest test-generated-grids
+  (letfn [(gen-state-map [] (apply cg/to-state-map (gg/make-cmd-grid)))
+          (state-map-valid? [sm] (spec/valid? cgs/state-map-spec sm))]
+  (is (every? state-map-valid? (repeatedly 10 gen-state-map)))))
 
-(defmacro no-out[form]
-  `(do ~form nil))
+(comment
+  (run-tests)
 
-(def large-grid (read-string (slurp "test/large_grid.edn")))
-
-(time (no-out (apply cg/to-state-map large-grid)))
-
-(do 
-  (def n-rows 700)
-  (def n-cols 500)
-  (def fn-spec (spec/fspec :args (cgs/make-grid-spec n-rows n-cols)
-                           :ret cgs/state-map))
-  (spec/exercise-fn cg/to-state-map fn-spec))
+  (def large-grid (read-string (slurp "test/large_grid.edn")))
+  (time (do (apply cg/to-state-map large-grid) nil))
+)

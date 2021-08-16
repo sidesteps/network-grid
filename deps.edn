@@ -1,15 +1,20 @@
 {
- :deps {
-        org.clojure/spec.alpha {:mvn/version "0.2.194"}
-        aleph/aleph {:mvn/version "0.4.7-alpha7"}
-        }
+ :deps
+ {
+  org.clojure/spec.alpha {:mvn/version "0.2.194"}
+  aleph/aleph {:mvn/version "0.4.7-alpha7"}
+  hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
+  }
 
  :aliases 
  { 
-  :web-server { 
-               :extra-deps {aleph/aleph {:mvn/version "0.4.7-alpha7"}}
-               :exec-fn web.network-service/run
+  :web-server {
+               :exec-fn web.network-service/run 
+               :exec-args {:port 8080} 
                }
+  :test-web-server { 
+                    :exec-fn test.tnetwork-service/run 
+                    :exec-args {:port 9090}
+                    }
   }
-}
-
+ }
