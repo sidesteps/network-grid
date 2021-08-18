@@ -1,4 +1,4 @@
-(ns web.netwok-service
+(ns web.network-service
   "Serves networks' state map.
   State map data is very homgenous and very well compressable/zippable. Will not stress network if responses gzipped."
   (:require [aleph.http :as http]
