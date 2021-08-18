@@ -1,0 +1,2 @@
+- run ./start_server
+- Start browser with url displayed to render network state.
